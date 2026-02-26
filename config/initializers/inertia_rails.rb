@@ -7,4 +7,5 @@ InertiaRails.configure do |config|
   config.use_script_element_for_initial_page = true
   config.use_data_inertia_head_attribute = true
   config.ssr_enabled = Rails.env.production?
+  config.ssr_url = ENV.fetch("INERTIA_SSR_URL", "http://localhost:13714")
 end

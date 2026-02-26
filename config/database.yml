@@ -17,7 +17,7 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  max_connections: <%= ENV["RAILS_MAX_THREADS"] { 5 } %>
 
 
 development:
@@ -73,7 +73,7 @@ test:
 # URL environment variable explicitly:
 #
 #   production:
-#     url: <%= ENV.fetch("MY_APP_DATABASE_URL") %>
+#     url: ENV["MY_APP_DATABASE_URL"]
 #
 # Connection URLs for non-primary databases can also be configured using
 # environment variables. The variable name is formed by concatenating the
@@ -89,8 +89,8 @@ production:
     <<: *default
     database: family_meal_production
     username: family_meal
-    password: <%= ENV.fetch("POSTGRES_PASSWORD") %>
-    host: <%= ENV.fetch("DB_HOST") %>
+    password: <%= ENV["POSTGRES_PASSWORD"] %>
+    host: <%= ENV["DB_HOST"] %>
   cache:
     <<: *primary_production
     database: family_meal_production_cache

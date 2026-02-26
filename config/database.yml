@@ -23,6 +23,8 @@ default: &default
 development:
   <<: *default
   database: family_meal_development
+  username: dev
+  password: devpassword
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.

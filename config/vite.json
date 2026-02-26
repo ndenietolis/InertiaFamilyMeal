@@ -1,7 +1,8 @@
 {
   "all": {
     "sourceCodeDir": "app/frontend",
-    "watchAdditionalPaths": []
+    "watchAdditionalPaths": [],
+    "viteBinPath": "node_modules/.bin/vite"
   },
   "production": {
     "ssrBuildEnabled": true

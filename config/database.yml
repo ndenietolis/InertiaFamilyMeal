@@ -22,13 +22,13 @@ default: &default
 
 development:
   <<: *default
-  database: inertia_family_meal_development
+  database: family_meal_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
   # When left blank, PostgreSQL will use the default role. This is
   # the same name as the operating system user running Rails.
-  #username: inertia_family_meal
+  #username: family_meal
 
   # The password associated with the PostgreSQL role (username).
   #password:
@@ -36,7 +36,7 @@ development:
   # Connect on a TCP socket. Omitted by default since the client uses a
   # domain socket that doesn't need configuration. Windows does not have
   # domain sockets, so uncomment these lines.
-  #host: localhost
+  # host: localhost
 
   # The TCP port the server listens on. Defaults to 5432.
   # If your server runs on a different port number, change accordingly.
@@ -56,7 +56,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: inertia_family_meal_test
+  database: family_meal_test
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -73,7 +73,7 @@ test:
 # URL environment variable explicitly:
 #
 #   production:
-#     url: <%= ENV["MY_APP_DATABASE_URL"] %>
+#     url: <%= ENV.fetch("MY_APP_DATABASE_URL") %>
 #
 # Connection URLs for non-primary databases can also be configured using
 # environment variables. The variable name is formed by concatenating the
@@ -87,18 +87,19 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: inertia_family_meal_production
-    username: inertia_family_meal
-    password: <%= ENV["INERTIA_FAMILY_MEAL_DATABASE_PASSWORD"] %>
+    database: family_meal_production
+    username: family_meal
+    password: <%= ENV.fetch("POSTGRES_PASSWORD") %>
+    host: <%= ENV.fetch("DB_HOST") %>
   cache:
     <<: *primary_production
-    database: inertia_family_meal_production_cache
+    database: family_meal_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: inertia_family_meal_production_queue
+    database: family_meal_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: inertia_family_meal_production_cable
+    database: family_meal_production_cable
     migrations_paths: db/cable_migrate

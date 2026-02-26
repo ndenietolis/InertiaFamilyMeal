@@ -1,0 +1,3 @@
+CREATE DATABASE family_meal_production_cache;
+CREATE DATABASE family_meal_production_queue;
+CREATE DATABASE family_meal_production_cable;

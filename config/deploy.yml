@@ -1,13 +1,20 @@
 # Name of your application. Used to uniquely configure containers.
-service: inertia_family_meal
+service: family_meal
 
 # Name of the container image (use your-user/app-name on external registries).
-image: inertia_family_meal
+image: family_meal
 
 # Deploy to these servers.
 servers:
   web:
-    - 129.151.59.136
+    - 150.136.191.56
+  vite:
+    hosts:
+      - 150.136.191.56
+    cmd: bin/vite ssr
+    options:
+      init: true # speed up stop time after deploy 
+      network-alias: vite_ssr
   # job:
   #   hosts:
   #     - 192.168.0.1
@@ -21,8 +28,9 @@ servers:
 # Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
 #
 proxy:
-  ssl: false
-  host: 129.151.59.136
+  ssl: true
+  hosts:
+    - familymeal.vip
 
 # Where you keep your container images.
 registry:
@@ -40,7 +48,9 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
+    - POSTGRES_PASSWORD
   clear:
+    INERTIA_SSR_URL: http://vite-ssr:13714
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
     SOLID_QUEUE_IN_PUMA: true
@@ -52,7 +62,8 @@ env:
     # WEB_CONCURRENCY: 2
 
     # Match this to any external database server to configure Active Record correctly
-    # Use inertia_family_meal-db for a db accessory server on same machine via local kamal docker network.
+    # Use family_meal-db for a db accessory server on same machine via local kamal docker network.
+    DB_HOST: family_meal-db
     # DB_HOST: 192.168.0.2
 
     # Log everything from Rails
@@ -69,7 +80,7 @@ aliases:
 # Use a persistent storage volume for sqlite database files and local Active Storage files.
 # Recommended to change this to a mounted volume path that is backed up off server.
 volumes:
-  - "inertia_family_meal_storage:/rails/storage"
+  - "family_meal_storage:/rails/storage"
 
 # Bridge fingerprinted assets, like JS and CSS, between versions to avoid
 # hitting 404 on in-flight requests. Combines all files from new and old
@@ -93,12 +104,27 @@ builder:
 # Use a different ssh user than root
 ssh:
   user: ubuntu
+  keys:
+    - ~/.ssh/family-meal/key
 
 # Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
+accessories:
+  db:
+    image: postgres:18
+    host: 150.136.191.56
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: family_meal
+        POSTGRES_DB: family_meal_production
+      secret:
+        - POSTGRES_PASSWORD
+        - RAILS_MASTER_KEY
+    files:
+      - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
+    directories:
+      - data:/var/lib/postgresql/data
+
 #     # Change to 3306 to expose port to the world instead of just local network.
 #     port: "127.0.0.1:3306:3306"
 #     env:

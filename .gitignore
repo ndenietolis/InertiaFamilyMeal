@@ -41,3 +41,8 @@ node_modules
 # https://vitejs.dev/guide/env-and-mode.html#env-files
 *.local
 
+# Kamal
+/config/deploy.yml.enc
+/config/master.key
+/.kamal/secrets
+/.kamal/secrets.*

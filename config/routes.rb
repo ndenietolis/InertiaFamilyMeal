@@ -1,5 +1,13 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, skip: [ :sessions, :registrations ], controllers: { sessions: 'users/sessions', registrations: 'users/registrations' }
+
+  devise_scope :user do
+    get 'login', to: 'users/sessions#new', as: :new_user_session
+    post 'login', to: 'users/sessions#create', as: :user_session
+    get 'signup', to: 'users/registrations#new', as: :new_user_registration
+    post 'signup', to: 'users/registrations#create', as: :user_registration
+    delete 'logout', to: 'users/sessions#destroy', as: :destroy_user_session
+  end
 
   # Redirect to localhost from 127.0.0.1 to use same IP address with Vite server
   constraints(host: "127.0.0.1") do

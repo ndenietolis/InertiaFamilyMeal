@@ -1,9 +1,9 @@
-import { createInertiaApp, type ResolvedComponent } from '@inertiajs/react'
+import { createInertiaApp } from '@inertiajs/react'
 import { createElement, ReactNode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 
 type ResolvedComponent = {
-  default: Reactnode
+  default: ReactNode
   layout?: (page: ReactNode) => ReactNode
 }
 

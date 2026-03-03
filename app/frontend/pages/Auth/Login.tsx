@@ -1,20 +1,19 @@
 import { Layout } from '@/components/auth/Layout'
 import { useForm } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TypographyH2, TypographyBody1 } from '@/components/common/Typography'
 import { FormInput } from '@/components/common/FormInput'
 
 export default function Login() {
-    
   const { data, setData, post, processing, errors } = useForm({
-    email: '',
+    username_or_email: '',
     password: '',
-    remember: false,
+    remember_me: false,
   })
 
-  const handleSubmit = (e: React.ChangeEvent) => {
-    console.log('data', e, data)
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     post('/login')
   }
@@ -27,11 +26,11 @@ export default function Login() {
         </TypographyH2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <FormInput
-            label="Email"
-            type="email"
-            value={data.email}
-            onChange={(e) => setData('email', e.target.value)}
-            errors={errors.email}
+            label="Username or Email"
+            type="text"
+            value={data.username_or_email}
+            onChange={(e) => setData('username_or_email', e.target.value)}
+            errors={errors.username_or_email}
           />
           <FormInput
             label="Password"
@@ -42,8 +41,8 @@ export default function Login() {
           />
           <div className="flex flex-row justify-left gap-2 items-center">
             <Checkbox
-              checked={data.remember}
-              onCheckedChange={() => setData('remember', !data.remember)}
+              checked={data.remember_me}
+              onCheckedChange={(checked) => setData('remember_me', checked === true)}
             />{' '}
             <TypographyBody1>
               Remember Me
@@ -51,6 +50,9 @@ export default function Login() {
           </div>
           <Button type="submit" disabled={processing}>
             Login
+          </Button>
+          <Button asChild type="button" variant="ghost">
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </form>
       </div>

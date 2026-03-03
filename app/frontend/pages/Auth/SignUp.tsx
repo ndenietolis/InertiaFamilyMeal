@@ -1,12 +1,13 @@
 import { Layout } from '@/components/auth/Layout'
 import { useForm } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import { TypographyH2 } from '@/components/common/Typography'
 import { FormInput } from '@/components/common/FormInput'
 
 export default function SignUp() {
   const { data, setData, post, processing, errors } = useForm({
-    name: '',
+    username: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -27,10 +28,11 @@ export default function SignUp() {
           <FormInput
             label="Username"
             type="text"
-            value={data.name}
-            onChange={(e) => setData('name', e.target.value)}
+            name="username"
+            value={data.username}
+            onChange={(e) => setData('username', e.target.value)}
             placeholder="What's your name, chef?"
-            errors={errors.name}
+            errors={errors.username}
           />
           <FormInput
             label="Email"
@@ -56,6 +58,9 @@ export default function SignUp() {
           />
           <Button type="submit" disabled={processing}>
             Sign Up
+          </Button>
+          <Button asChild type="button" variant="ghost">
+            <Link href="/login">Sign In</Link>
           </Button>
         </form>
       </div>

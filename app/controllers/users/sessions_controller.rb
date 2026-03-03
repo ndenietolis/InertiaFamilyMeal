@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Users::SessionsController < Devise::SessionsController
-  # before_action :configure_sign_in_params, only: [:create]
 
   # GET /resource/sign_in
   def new
@@ -10,24 +9,27 @@ class Users::SessionsController < Devise::SessionsController
 
   # POST /resource/sign_in
   def create
-    self.resource = warden.authenticate(auth_options)
+    self.resource = User.by_username_or_email(sign_in_params[:username_or_email])
 
-    if resource
+    if resource&.valid_password?(sign_in_params[:password])
       set_flash_message!(:notice, :signed_in)
       sign_in(resource_name, resource)
+      remember_me(resource) if ActiveModel::Type::Boolean.new.cast(sign_in_params[:remember_me])
       respond_with resource, location: after_sign_in_path_for(resource)
     else
-      self.resource = resource_class.new(sign_in_params)
-      clean_up_passwords(resource)
-      set_minimum_password_length
+      if resource
+        clean_up_passwords(resource)
+      end
 
-      render inertia: 'Auth/Login',
-             props: {
-               errors: {
-                 email: [I18n.t('devise.failure.invalid', authentication_keys: 'Email')]
-               }
-             },
-             status: :unprocessable_entity
+      render inertia: "Auth/Login",
+            props: {
+              errors: {
+                username_or_email: [
+                  I18n.t("devise.failure.invalid", authentication_keys: "Username or email")
+                ]
+              }
+            },
+            status: :unprocessable_entity
     end
   end
 
@@ -36,16 +38,10 @@ class Users::SessionsController < Devise::SessionsController
     super
   end
 
-  # protected
-
-  # If you have extra params to permit, append them to the sanitizer.
-  # def configure_sign_in_params
-  #   devise_parameter_sanitizer.permit(:sign_in, keys: [:attribute])
-  # end
-
   protected
 
   def sign_in_params
-    params.fetch(resource_name, params).permit(:email, :password, :remember_me, :remember)
+    source = params[resource_name] || params[:session] || params
+    source.permit(:email, :username_or_email, :password, :remember_me)
   end
 end

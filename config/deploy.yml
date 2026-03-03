@@ -31,6 +31,10 @@ proxy:
   ssl: true
   hosts:
     - familymeal.vip
+  healthcheck:
+    path: /up
+    interval: 3
+    timeout: 5
 
 # Where you keep your container images.
 registry:

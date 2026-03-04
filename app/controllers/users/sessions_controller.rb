@@ -14,7 +14,7 @@ class Users::SessionsController < Devise::SessionsController
     if resource&.valid_password?(sign_in_params[:password])
       set_flash_message!(:notice, :signed_in)
       sign_in(resource_name, resource)
-      remember_me(resource) if ActiveModel::Type::Boolean.new.cast(sign_in_params[:remember_me])
+      resource.remember_me if ActiveModel::Type::Boolean.new.cast(sign_in_params[:remember_me])
       respond_with resource, location: after_sign_in_path_for(resource)
     else
       if resource

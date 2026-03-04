@@ -1,10 +1,10 @@
-require 'active_support/concern'
+require "active_support/concern"
 
-model Auth
+module Auth
   extend ActiveSupport::Concern
 
   included do
-    before_action:authenticate_user!
+    before_action :authenticate_user!
   end
 
   private

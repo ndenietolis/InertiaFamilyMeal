@@ -4,6 +4,9 @@ service: family_meal
 # Name of the container image (use your-user/app-name on external registries).
 image: family_meal
 
+# Allow enough time for entrypoint db:prepare + app boot before healthcheck fails deployment.
+deploy_timeout: 120
+
 # Deploy to these servers.
 servers:
   web:

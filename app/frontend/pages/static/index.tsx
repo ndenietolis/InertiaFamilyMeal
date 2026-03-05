@@ -1,9 +1,8 @@
 import { Layout } from '@/components/static/Layout'
+import { StaticBody } from '@/components/static/StaticBody'
 export default function Static() {
   return (
-    <div>
-      Static Page
-    </div>
+    <StaticBody />
   )
 }
 

@@ -16,18 +16,18 @@ export const NavBar = () => {
   const isLoggedIn = Boolean(props.auth?.user)
 
   return (
-    <div className="flex items-center justify-end gap-3 bg-gray-900/20 p-4 backdrop-blur-md shadow-xs/20">
+    <div className="flex items-center justify-end gap-3 bg-gray-900/20 p-2 rounded-br-xl rounded-tl-xl backdrop-blur-md shadow-xs/20">
       {isLoggedIn ? (
         <>
           <Button asChild type="button" variant="ghost">
             <Link href="/kitchen">Kitchen</Link>
           </Button>
-          <Button type="button" variant="secondary" onClick={() => router.delete('/logout')}>
+          <Button type="button" variant="outline" onClick={() => router.delete('/logout')}>
             Logout
           </Button>
         </>
       ) : (
-        <Button asChild type="button" variant="secondary">
+        <Button asChild type="button" variant="ghost">
           <Link href="/login">Login</Link>
         </Button>
       )}

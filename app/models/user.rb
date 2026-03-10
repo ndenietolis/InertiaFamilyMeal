@@ -1,7 +1,13 @@
 class User < ApplicationRecord
   attr_writer :login
 
-  # Scopes ########################################
+  # Associations########################################################
+  has_many :user_recipes, :dependent => :destroy
+  has_many :recipes, :through => :user_recipes
+  has_many :user_ingredients, :dependent => :destroy
+  has_many :ingredients, :through => :user_ingredients
+
+  # Scopes #############################################################
 
   validates :username, presence: true, uniqueness: { case_sensitive: false }
   # only allow letter, number, underscore and punctuation.

@@ -16,6 +16,8 @@ Rails.application.routes.draw do
   root 'static#index'
   get 'static', to: 'static#index'
   get 'kitchen', to: 'static#kitchen'
+  resources :ingredients, only: [:new, :show, :create]
+  resources :recipes, only: [:new, :show, :create]
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Health check endpoint for load balancers and uptime monitors.

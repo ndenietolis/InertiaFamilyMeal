@@ -14,6 +14,7 @@ class RecipesController < ApplicationController
     recipe = Recipe.new(recipe_params)
 
     if recipe.save
+      current_user.user_recipes.create!(recipe: recipe)
       attach_ingredients(recipe)
       redirect_to recipe_path(recipe), notice: "Recipe created."
     else
@@ -48,14 +49,15 @@ class RecipesController < ApplicationController
   end
 
   def attach_ingredients(recipe)
-    ingredient_names.each do |ingredient_name|
-      ingredient = Ingredient.find_or_create_by!(name: ingredient_name)
-      recipe.ingredients << ingredient unless recipe.ingredients.exists?(ingredient.id)
+    return if ingredient_names.empty?
+
+    current_user.ingredients.distinct.where(name: ingredient_names).find_each do |ingredient|
+      recipe.recipe_ingredients.find_or_create_by!(ingredient: ingredient)
     end
   end
 
   def set_recipe
-    @recipe = Recipe.includes(:ingredients).find(params[:id])
+    @recipe = current_user.recipes.includes(recipe_ingredients: :ingredient).find(params[:id])
   end
 
   def serialized_recipe(recipe)
@@ -64,14 +66,31 @@ class RecipesController < ApplicationController
       name: recipe.name,
       description: recipe.description,
       instructions: recipe.instructions,
-      ingredient_names: recipe.ingredients.map(&:name).compact
+      ingredient_names: recipe.ingredients.map(&:name).compact,
+      recipe_ingredients: recipe.recipe_ingredients.map do |recipe_ingredient|
+        {
+          id: recipe_ingredient.id,
+          ingredient_id: recipe_ingredient.ingredient.id,
+          ingredient_name: recipe_ingredient.ingredient.name,
+          ingredient_description: recipe_ingredient.ingredient.description,
+          ingredient_unit_cost: recipe_ingredient.ingredient.unit_cost&.to_s("F")
+        }
+      end
     }
   end
 
   def recipe_page_props(**extra_props)
     {
       recipe: nil,
-      errors: {}
+      errors: {},
+      availableIngredients: current_user.ingredients.distinct.order(:name).map do |ingredient|
+        {
+          id: ingredient.id,
+          name: ingredient.name,
+          description: ingredient.description,
+          unit_cost: ingredient.unit_cost&.to_s("F")
+        }
+      end
     }.merge(extra_props)
   end
 end

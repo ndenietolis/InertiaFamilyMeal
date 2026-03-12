@@ -17,6 +17,7 @@ export type RecipePageData = {
   description: string | null
   instructions: string | null
   ingredient_names: string[]
+  recipe_ingredients?: RecipeIngredientRow[]
 }
 
 export type IngredientRow = {
@@ -33,6 +34,21 @@ export type IngredientPageData = {
   description: string | null
   unit_cost: string | null
   recipe_names?: string[]
+}
+
+export type RecipeIngredientRow = {
+  id: number
+  ingredient_id: number
+  ingredient_name: string | null
+  ingredient_description: string | null
+  ingredient_unit_cost: string | null
+}
+
+export type IngredientOption = {
+  id: number
+  name: string | null
+  description: string | null
+  unit_cost: string | null
 }
 
 export type FormErrors = Record<string, string | string[]>

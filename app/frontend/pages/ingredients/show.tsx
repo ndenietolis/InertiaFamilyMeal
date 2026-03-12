@@ -21,7 +21,7 @@ function FieldError({ error }: { error?: string | string[] }) {
 
 export default function IngredientShow({ ingredient, errors = {} }: IngredientPageProps) {
   const isNewIngredient = ingredient?.id == null
-  const { data, setData, post, processing } = useForm({
+  const { data, setData, post, patch, processing } = useForm({
     name: ingredient?.name ?? '',
     description: ingredient?.description ?? '',
     unit_cost: ingredient?.unit_cost ?? '',
@@ -37,7 +37,11 @@ export default function IngredientShow({ ingredient, errors = {} }: IngredientPa
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    post('/ingredients')
+    if (isNewIngredient) {
+      post('/ingredients')
+    } else {
+      patch(`/ingredients/${ingredient.id}`)
+    }
   }
 
   return (
@@ -72,7 +76,6 @@ export default function IngredientShow({ ingredient, errors = {} }: IngredientPa
               onChange={(e) => setData('name', e.target.value)}
               placeholder="Garlic"
               className="border-slate-300 bg-white"
-              readOnly={!isNewIngredient}
             />
             <FieldError error={errors.name} />
           </div>
@@ -85,7 +88,6 @@ export default function IngredientShow({ ingredient, errors = {} }: IngredientPa
               onChange={(e) => setData('description', e.target.value)}
               placeholder="Fresh minced garlic"
               className="min-h-28 border-slate-300 bg-white"
-              readOnly={!isNewIngredient}
             />
             <FieldError error={errors.description} />
           </div>
@@ -101,7 +103,6 @@ export default function IngredientShow({ ingredient, errors = {} }: IngredientPa
               onChange={(e) => setData('unit_cost', e.target.value)}
               placeholder="2.99"
               className="border-slate-300 bg-white"
-              readOnly={!isNewIngredient}
             />
             <FieldError error={errors.unit_cost} />
           </div>
@@ -115,13 +116,11 @@ export default function IngredientShow({ ingredient, errors = {} }: IngredientPa
             </div>
           ) : null}
 
-          {isNewIngredient ? (
-            <div className="flex justify-end">
-              <Button type="submit" disabled={processing} className="bg-slate-900 text-white hover:bg-slate-800">
-                {processing ? 'Saving...' : 'Save Ingredient'}
-              </Button>
-            </div>
-          ) : null}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={processing} className="bg-slate-900 text-white hover:bg-slate-800">
+              {processing ? 'Saving...' : isNewIngredient ? 'Save Ingredient' : 'Update Ingredient'}
+            </Button>
+          </div>
         </form>
       </div>
     </section>

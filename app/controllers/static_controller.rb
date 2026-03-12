@@ -7,7 +7,7 @@ class StaticController < ApplicationController
 
   def kitchen
     render inertia: {
-      recipes: Recipe.includes(:ingredients).order(:name).map do |recipe|
+      recipes: current_user.recipes.includes(:ingredients).distinct.order(:name).map do |recipe|
         {
           id: recipe.id,
           name: recipe.name,
@@ -16,7 +16,7 @@ class StaticController < ApplicationController
           ingredient_names: recipe.ingredients.map(&:name).compact
         }
       end,
-      ingredients: Ingredient.includes(:recipes).order(:name).map do |ingredient|
+      ingredients: current_user.ingredients.includes(:recipes).distinct.order(:name).map do |ingredient|
         {
           id: ingredient.id,
           name: ingredient.name,

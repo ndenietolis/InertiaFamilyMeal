@@ -1,17 +1,28 @@
 import * as React from 'react'
-import { Link, useForm } from '@inertiajs/react'
-import type { FormEvent } from 'react'
+import { Link, router, useForm } from '@inertiajs/react'
+import type { SyntheticEvent } from 'react'
+import { Trash2 } from 'lucide-react'
 
+import { SearchSelect } from '@/components/common/SearchSelect'
 import { Layout } from '@/components/static/Layout'
 import { Button } from '@/components/ui/button'
 import { FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-import type { FormErrors, RecipePageData } from '@/types'
+import type { FormErrors, IngredientOption, RecipePageData } from '@/types'
 
 type RecipePageProps = {
   recipe: RecipePageData | null
   errors?: FormErrors
+  availableIngredients: IngredientOption[]
 }
 
 function FieldError({ error }: { error?: string | string[] }) {
@@ -19,27 +30,68 @@ function FieldError({ error }: { error?: string | string[] }) {
   return <p className="text-sm text-red-600">{Array.isArray(error) ? error[0] : error}</p>
 }
 
-export default function RecipeShow({ recipe, errors = {} }: RecipePageProps) {
+export default function RecipeShow({
+  recipe,
+  errors = {},
+  availableIngredients,
+}: RecipePageProps) {
   const isNewRecipe = recipe?.id == null
   const { data, setData, post, processing } = useForm({
     name: recipe?.name ?? '',
     description: recipe?.description ?? '',
     instructions: recipe?.instructions ?? '',
-    ingredient_list: recipe?.ingredient_names.join(', ') ?? '',
+    ingredient_list: '',
   })
+  const [selectedIngredientId, setSelectedIngredientId] = React.useState<number | null>(null)
+  const [recipeIngredientProcessing, setRecipeIngredientProcessing] = React.useState(false)
 
   React.useEffect(() => {
     setData({
       name: recipe?.name ?? '',
       description: recipe?.description ?? '',
       instructions: recipe?.instructions ?? '',
-      ingredient_list: recipe?.ingredient_names.join(', ') ?? '',
+      ingredient_list: '',
     })
   }, [recipe, setData])
 
-  const handleSubmit = (e: FormEvent) => {
+  const selectableIngredients = React.useMemo(() => {
+    const selectedIds = new Set(recipe?.recipe_ingredients?.map((item) => item.ingredient_id) ?? [])
+    return availableIngredients.filter((ingredient) => !selectedIds.has(ingredient.id))
+  }, [availableIngredients, recipe?.recipe_ingredients])
+
+  const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault()
     post('/recipes')
+  }
+
+  const handleIngredientSelect = (ingredientId: number) => {
+    if (!recipe?.id) return
+
+    setSelectedIngredientId(ingredientId)
+    setRecipeIngredientProcessing(true)
+    router.post(`/recipes/${recipe.id}/recipe_ingredients`, {
+      ingredient_id: ingredientId,
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setSelectedIngredientId(null)
+        setRecipeIngredientProcessing(false)
+      },
+      onError: () => {
+        setRecipeIngredientProcessing(false)
+      },
+      onFinish: () => {
+        setRecipeIngredientProcessing(false)
+      },
+    })
+  }
+
+  const handleRecipeIngredientDelete = (recipeIngredientId: number) => {
+    if (!recipe?.id) return
+
+    router.delete(`/recipes/${recipe.id}/recipe_ingredients/${recipeIngredientId}`, {
+      preserveScroll: true,
+    })
   }
 
   return (
@@ -105,19 +157,6 @@ export default function RecipeShow({ recipe, errors = {} }: RecipePageProps) {
             <FieldError error={errors.instructions} />
           </div>
 
-          <div className="grid gap-2">
-            <FieldLabel htmlFor="recipe-ingredients">Ingredients</FieldLabel>
-            <Input
-              id="recipe-ingredients"
-              value={data.ingredient_list}
-              onChange={(e) => setData('ingredient_list', e.target.value)}
-              placeholder="Pasta, Garlic, Olive oil"
-              className="border-slate-300 bg-white"
-              readOnly={!isNewRecipe}
-            />
-            <FieldError error={errors.ingredient_list} />
-          </div>
-
           {isNewRecipe ? (
             <div className="flex justify-end">
               <Button type="submit" disabled={processing} className="bg-slate-900 text-white hover:bg-slate-800">
@@ -126,6 +165,88 @@ export default function RecipeShow({ recipe, errors = {} }: RecipePageProps) {
             </div>
           ) : null}
         </form>
+
+        {!isNewRecipe ? (
+          <div className="mt-10 border-t border-slate-200 pt-8">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900">Recipe Ingredients</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Search your ingredients and add them to this recipe.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <FieldLabel htmlFor="recipe-ingredient-search">Ingredients</FieldLabel>
+              <SearchSelect
+                id="recipe-ingredient-search"
+                items={selectableIngredients}
+                placeholder="Search your ingredients..."
+                emptyMessage="No matching user ingredients found."
+                disabled={recipeIngredientProcessing}
+                selectedItemId={selectedIngredientId}
+                getItemId={(ingredient) => ingredient.id}
+                getItemLabel={(ingredient) => ingredient.name || 'Untitled ingredient'}
+                getItemDescription={(ingredient) => ingredient.description || 'No description'}
+                onSelect={(ingredient) => handleIngredientSelect(ingredient.id)}
+              />
+            </div>
+
+            <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90">
+              <Table>
+                <TableHeader className="bg-slate-50/90">
+                  <TableRow className="hover:bg-slate-50/90">
+                    <TableHead className="w-[28%]">Ingredient</TableHead>
+                    <TableHead className="w-[44%]">Description</TableHead>
+                    <TableHead>Unit Cost</TableHead>
+                    <TableHead className="w-[1%] text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recipe?.recipe_ingredients?.length ? (
+                    recipe.recipe_ingredients.map((recipeIngredient) => (
+                      <TableRow key={recipeIngredient.id} className="border-slate-200/80">
+                        <TableCell className="font-medium text-slate-900">
+                          <Link
+                            href={`/ingredients/${recipeIngredient.ingredient_id}`}
+                            className="transition-colors hover:text-slate-600"
+                          >
+                            {recipeIngredient.ingredient_name || 'Untitled ingredient'}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          {recipeIngredient.ingredient_description || '—'}
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          {recipeIngredient.ingredient_unit_cost
+                            ? `$${recipeIngredient.ingredient_unit_cost}`
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-slate-500 hover:bg-slate-100 hover:text-red-600"
+                            onClick={() => handleRecipeIngredientDelete(recipeIngredient.id)}
+                          >
+                            <Trash2 className="size-4" />
+                            <span className="sr-only">Remove ingredient from recipe</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow className="border-slate-200/80">
+                      <TableCell colSpan={4} className="py-10 text-center text-slate-500">
+                        No recipe ingredients added yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ) : null}
       </div>
     </section>
   )

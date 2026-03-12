@@ -1,6 +1,6 @@
 class IngredientsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_ingredient, only: [:show]
+  before_action :set_ingredient, only: [:show, :update]
 
   def new
     render inertia: "ingredients/show", props: ingredient_page_props
@@ -14,6 +14,7 @@ class IngredientsController < ApplicationController
     ingredient = Ingredient.new(ingredient_params)
 
     if ingredient.save
+      current_user.user_ingredients.create!(ingredient: ingredient)
       redirect_to ingredient_path(ingredient), notice: "Ingredient created."
     else
       render inertia: "ingredients/show",
@@ -30,6 +31,25 @@ class IngredientsController < ApplicationController
     end
   end
 
+  def update
+    if @ingredient.update(ingredient_params)
+      redirect_to ingredient_path(@ingredient), notice: "Ingredient updated."
+    else
+      render inertia: "ingredients/show",
+             props: ingredient_page_props(
+               errors: @ingredient.errors.to_hash(true),
+               ingredient: {
+                 id: @ingredient.id,
+                 name: @ingredient.name,
+                 description: @ingredient.description,
+                 unit_cost: @ingredient.unit_cost&.to_s,
+                 recipe_names: @ingredient.recipes.order(:name).pluck(:name).compact
+               }
+             ),
+             status: :unprocessable_entity
+    end
+  end
+
   private
 
   def ingredient_params
@@ -39,7 +59,7 @@ class IngredientsController < ApplicationController
   end
 
   def set_ingredient
-    @ingredient = Ingredient.includes(:recipes).find(params[:id])
+    @ingredient = current_user.ingredients.includes(:recipes).find(params[:id])
   end
 
   def serialized_ingredient(ingredient)

@@ -40,7 +40,7 @@ export default function RecipeShow({
     name: recipe?.name ?? '',
     description: recipe?.description ?? '',
     instructions: recipe?.instructions ?? '',
-    ingredient_list: '',
+    ingredient_ids: recipe?.selected_ingredient_ids ?? [],
   })
   const [selectedIngredientId, setSelectedIngredientId] = React.useState<number | null>(null)
   const [recipeIngredientProcessing, setRecipeIngredientProcessing] = React.useState(false)
@@ -50,14 +50,28 @@ export default function RecipeShow({
       name: recipe?.name ?? '',
       description: recipe?.description ?? '',
       instructions: recipe?.instructions ?? '',
-      ingredient_list: '',
+      ingredient_ids: recipe?.selected_ingredient_ids ?? [],
     })
   }, [recipe, setData])
 
+  const displayedRecipeIngredients = React.useMemo(() => {
+    if (recipe?.recipe_ingredients?.length) return recipe.recipe_ingredients
+
+    return availableIngredients
+      .filter((ingredient) => data.ingredient_ids.includes(ingredient.id))
+      .map((ingredient) => ({
+        id: null,
+        ingredient_id: ingredient.id,
+        ingredient_name: ingredient.name,
+        ingredient_description: ingredient.description,
+        ingredient_unit_cost: ingredient.unit_cost,
+      }))
+  }, [availableIngredients, data.ingredient_ids, recipe?.recipe_ingredients])
+
   const selectableIngredients = React.useMemo(() => {
-    const selectedIds = new Set(recipe?.recipe_ingredients?.map((item) => item.ingredient_id) ?? [])
+    const selectedIds = new Set(displayedRecipeIngredients.map((item) => item.ingredient_id))
     return availableIngredients.filter((ingredient) => !selectedIds.has(ingredient.id))
-  }, [availableIngredients, recipe?.recipe_ingredients])
+  }, [availableIngredients, displayedRecipeIngredients])
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault()
@@ -65,6 +79,11 @@ export default function RecipeShow({
   }
 
   const handleIngredientSelect = (ingredientId: number) => {
+    if (isNewRecipe) {
+      setData('ingredient_ids', [...data.ingredient_ids, ingredientId])
+      return
+    }
+
     if (!recipe?.id) return
 
     setSelectedIngredientId(ingredientId)
@@ -87,6 +106,14 @@ export default function RecipeShow({
   }
 
   const handleRecipeIngredientDelete = (recipeIngredientId: number) => {
+    if (isNewRecipe) {
+      setData(
+        'ingredient_ids',
+        data.ingredient_ids.filter((ingredientId) => ingredientId !== recipeIngredientId)
+      )
+      return
+    }
+
     if (!recipe?.id) return
 
     router.delete(`/recipes/${recipe.id}/recipe_ingredients/${recipeIngredientId}`, {
@@ -166,12 +193,13 @@ export default function RecipeShow({
           ) : null}
         </form>
 
-        {!isNewRecipe ? (
-          <div className="mt-10 border-t border-slate-200 pt-8">
+        <div className="mt-10 border-t border-slate-200 pt-8">
             <div className="mb-4">
               <h2 className="text-xl font-semibold tracking-tight text-slate-900">Recipe Ingredients</h2>
               <p className="mt-1 text-sm text-slate-600">
-                Search your ingredients and add them to this recipe.
+                {isNewRecipe
+                  ? 'Search your ingredients and stage them before saving the recipe.'
+                  : 'Search your ingredients and add them to this recipe.'}
               </p>
             </div>
 
@@ -182,7 +210,7 @@ export default function RecipeShow({
                 items={selectableIngredients}
                 placeholder="Search your ingredients..."
                 emptyMessage="No matching user ingredients found."
-                disabled={recipeIngredientProcessing}
+                disabled={!isNewRecipe && recipeIngredientProcessing}
                 selectedItemId={selectedIngredientId}
                 getItemId={(ingredient) => ingredient.id}
                 getItemLabel={(ingredient) => ingredient.name || 'Untitled ingredient'}
@@ -202,9 +230,12 @@ export default function RecipeShow({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recipe?.recipe_ingredients?.length ? (
-                    recipe.recipe_ingredients.map((recipeIngredient) => (
-                      <TableRow key={recipeIngredient.id} className="border-slate-200/80">
+                  {displayedRecipeIngredients.length ? (
+                    displayedRecipeIngredients.map((recipeIngredient) => (
+                      <TableRow
+                        key={recipeIngredient.id ?? `pending-${recipeIngredient.ingredient_id}`}
+                        className="border-slate-200/80"
+                      >
                         <TableCell className="font-medium text-slate-900">
                           <Link
                             href={`/ingredients/${recipeIngredient.ingredient_id}`}
@@ -227,7 +258,11 @@ export default function RecipeShow({
                             variant="ghost"
                             size="icon-sm"
                             className="text-slate-500 hover:bg-slate-100 hover:text-red-600"
-                            onClick={() => handleRecipeIngredientDelete(recipeIngredient.id)}
+                            onClick={() =>
+                              handleRecipeIngredientDelete(
+                                isNewRecipe ? recipeIngredient.ingredient_id : (recipeIngredient.id as number)
+                              )
+                            }
                           >
                             <Trash2 className="size-4" />
                             <span className="sr-only">Remove ingredient from recipe</span>
@@ -246,7 +281,6 @@ export default function RecipeShow({
               </Table>
             </div>
           </div>
-        ) : null}
       </div>
     </section>
   )

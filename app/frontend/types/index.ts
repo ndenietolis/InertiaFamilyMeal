@@ -18,6 +18,7 @@ export type RecipePageData = {
   instructions: string | null
   ingredient_names: string[]
   recipe_ingredients?: RecipeIngredientRow[]
+  selected_ingredient_ids?: number[]
 }
 
 export type IngredientRow = {
@@ -37,7 +38,7 @@ export type IngredientPageData = {
 }
 
 export type RecipeIngredientRow = {
-  id: number
+  id: number | null
   ingredient_id: number
   ingredient_name: string | null
   ingredient_description: string | null

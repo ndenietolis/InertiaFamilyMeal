@@ -26,7 +26,9 @@ class RecipesController < ApplicationController
                  name: recipe.name,
                  description: recipe.description,
                  instructions: recipe.instructions,
-                 ingredient_names: ingredient_names
+                 ingredient_names: selected_ingredients.map(&:name),
+                 selected_ingredient_ids: selected_ingredient_ids,
+                 recipe_ingredients: serialized_selected_ingredients
                }
              ),
              status: :unprocessable_entity
@@ -39,19 +41,18 @@ class RecipesController < ApplicationController
     params.fetch(:recipe, params).permit(:name, :description, :instructions)
   end
 
-  def ingredient_names
-    params.fetch(:recipe, params)
-          .fetch(:ingredient_list, "")
-          .split(",")
-          .map(&:strip)
-          .reject(&:blank?)
-          .uniq { |name| name.downcase }
+  def selected_ingredient_ids
+    Array(params.fetch(:recipe, params)[:ingredient_ids]).reject(&:blank?).map(&:to_i).uniq
+  end
+
+  def selected_ingredients
+    current_user.ingredients.distinct.where(id: selected_ingredient_ids).order(:name)
   end
 
   def attach_ingredients(recipe)
-    return if ingredient_names.empty?
+    return if selected_ingredient_ids.empty?
 
-    current_user.ingredients.distinct.where(name: ingredient_names).find_each do |ingredient|
+    selected_ingredients.find_each do |ingredient|
       recipe.recipe_ingredients.find_or_create_by!(ingredient: ingredient)
     end
   end
@@ -77,6 +78,18 @@ class RecipesController < ApplicationController
         }
       end
     }
+  end
+
+  def serialized_selected_ingredients
+    selected_ingredients.map do |ingredient|
+      {
+        id: nil,
+        ingredient_id: ingredient.id,
+        ingredient_name: ingredient.name,
+        ingredient_description: ingredient.description,
+        ingredient_unit_cost: ingredient.unit_cost&.to_s("F")
+      }
+    end
   end
 
   def recipe_page_props(**extra_props)

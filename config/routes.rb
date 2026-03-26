@@ -15,7 +15,7 @@ Rails.application.routes.draw do
   end
   root 'static#index'
   get 'static', to: 'static#index'
-  get 'kitchen', to: 'static#kitchen'
+  get 'kitchen', to: 'kitchen#index'
   resources :ingredients, only: [:new, :show, :create, :update]
   resources :recipes, only: [:new, :show, :create]
   resources :recipes, only: [] do
